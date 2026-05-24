@@ -82,6 +82,9 @@ endif()
 
 project(simh VERSION "${SIMH_VERSION}" LANGUAGES C CXX)
 
+## Tell cmake we need c99 because GCC 15 defaults to c23 which breaks things.
+set(CMAKE_C_STANDARD 99)
+
 include(vcpkg-setup)
 include(GNUInstallDirs)
 
@@ -183,7 +186,7 @@ option(WITH_REGEX
        TRUE)
 option(PREFER_PCRE
        "Prefer (=1)/ignore (=0) Prefer PCRE over PCRE2 (def: ignore)"
-       TRUE)
+       FALSE)
 option(WITH_NETWORK
        "Enable (=1)/disable (=0) simulator networking support. (def: enabled)"
        TRUE)

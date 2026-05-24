@@ -160,6 +160,10 @@ ifneq (3,${SIM_MAJOR})
   ifneq (,$(findstring imlac,${MAKECMDGOALS}))
     VIDEO_USEFUL = true
   endif
+  # building the LINC needs video support
+  ifneq (,$(findstring linc,${MAKECMDGOALS}))
+    VIDEO_USEFUL = true
+  endif
   # building the TT2500 needs video support
   ifneq (,$(findstring tt2500,${MAKECMDGOALS}))
     VIDEO_USEFUL = true
@@ -607,14 +611,37 @@ ifeq (${WIN32},)  #*nix Environments (&& cygwin)
       LIBEXT = $(LIBEXTSAVE)
     endif
   endif
-  # Find PCRE RegEx library.
-  ifneq (,$(call find_include,pcre))
-    ifneq (,$(call find_lib,pcre))
-      OS_CCDEFS += -DHAVE_PCRE_H
-      OS_LDFLAGS += -lpcre
-      $(info using libpcre: $(call find_lib,pcre) $(call find_include,pcre))
-      ifeq ($(LD_SEARCH_NEEDED),$(call need_search,pcre))
-        OS_LDFLAGS += -L$(dir $(call find_lib,pcre))
+  FALLBACK_PCRE=yes
+  # Find the PCRE2 RegEx library
+  ifneq (,$(call find_include,pcre2))
+    PCRE2_LIB=pcre2-8
+    ifneq (,$(call find_lib,${PCRE2_LIB}))
+      OS_CCDEFS += -DHAVE_PCRE2_H
+      ifeq ($(LD_SEARCH_NEEDED),$(call need_search,${PCRE2_LIB}))
+	PCRE2_LIBPATH = $(dir $(call find_lib,${PCRE2_LIB}))
+	ifneq (,${PCRE2_LIBPATH})
+	  OS_LDFLAGS += -L${PCRE2_LIBPATH}
+	endif
+      endif
+      OS_LDFLAGS += -l${PCRE2_LIB}
+      $(info using libpcre2-8: $(call find_lib,${PCRE2_LIB}) $(call find_include,pcre2))
+      FALLBACK_PCRE=
+    endif
+  endif
+  ifneq ($(FALLBACK_PCRE),)
+    $(info *** Info *** PCRE2 not detected, falling back to PCRE)
+  endif
+  # Find PCRE RegEx library, either because we didn't want PCRE2 or we didn't
+  # find PCRE2.
+  ifneq (${FALLBACK_PCRE},)
+    ifneq (,$(call find_include,pcre))
+      ifneq (,$(call find_lib,pcre))
+	OS_CCDEFS += -DHAVE_PCRE_H
+	OS_LDFLAGS += -lpcre
+        $(info using libpcre: $(call find_lib,pcre) $(call find_include,pcre))
+	ifeq ($(LD_SEARCH_NEEDED),$(call need_search,pcre))
+	  OS_LDFLAGS += -L$(dir $(call find_lib,pcre))
+	endif
       endif
     endif
   endif
@@ -1720,6 +1747,13 @@ IMLAC = ${IMLACD}/imlac_sys.c ${IMLACD}/imlac_cpu.c \
 IMLAC_OPT = -I ${IMLACD} ${DISPLAY_OPT} ${AIO_CCDEFS}
 
 
+LINCD = ${SIMHD}/linc
+LINC = ${LINCD}/linc_cpu.c ${LINCD}/linc_crt.c ${LINCD}/linc_dpy.c \
+	${LINCD}/linc_kbd.c ${LINCD}/linc_sys.c \
+	${LINCD}/linc_tape.c ${LINCD}/linc_tty.c ${DISPLAYL}
+LINC_OPT = -I ${LINCD} ${DISPLAY_OPT} ${AIO_CCDEFS}
+
+
 STUBD = ${SIMHD}/stub
 STUB = ${STUBD}/stub_sys.c ${STUBD}/stub_cpu.c
 STUB_OPT = -I ${STUBD}
@@ -2219,7 +2253,7 @@ ALL = pdp1 pdp4 pdp7 pdp8 pdp9 pdp15 pdp11 pdp10 \
 	swtp6800mp-a swtp6800mp-a2 tx-0 ssem b5500 intel-mds \
 	scelbi 3b2 3b2-700 i701 i704 i7010 i7070 i7080 i7090 \
 	sigma uc15 pdp10-ka pdp10-ki pdp10-kl pdp10-ks pdp6 i650 \
-	imlac tt2500 sel32
+	imlac linc tt2500 sel32
 
 all : ${ALL}
 
@@ -2316,6 +2350,15 @@ ${BIN}imlac${EXE} : ${IMLAC} ${SIM}
 	${CC} ${IMLAC} ${SIM} ${IMLAC_OPT} ${CC_OUTSPEC} ${LDFLAGS}
 ifneq (,$(call find_test,${IMLAC},imlac))
 	$@ $(call find_test,${IMLACD},imlac) ${TEST_ARG}
+endif
+
+linc : ${BIN}linc${EXE}
+
+${BIN}linc${EXE} : ${LINC} ${SIM}
+	${MKDIRBIN}
+	${CC} ${LINC} ${SIM} ${LINC_OPT} ${CC_OUTSPEC} ${LDFLAGS}
+ifneq (,$(call find_test,${LINC},imlac))
+	$@ $(call find_test,${LINCD},linc) ${TEST_ARG}
 endif
 
 stub : ${BIN}stub${EXE}

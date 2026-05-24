@@ -91,6 +91,8 @@ Before you begin building the simulators, you need the following:
 
       apt: `sudo apt install cmake cmake-data`
 
+      dnf: `sudo dnf install cmake`
+
       pacman: `sudo pacman install cmake`
 
   - macOS: Install `cmake` using your preferred external package management
@@ -279,6 +281,12 @@ binaries.
     $ sudo sh .travis/deps.sh linux
     ```
 
+  - Linux dnf-based distributions (e.g., Fedora, Red Hat):
+
+    ```bash
+    $ sudo sh .travis/deps.sh redhat
+    ```
+
   - macOS Homebrew:
 
     ```bash
@@ -398,9 +406,11 @@ simh                      # Top-level SIMH source directory
 +-- BIN                   # Simulator executables (note 1)
 |   +-- Debug
 |   +-- Release
+|   +-- RelWithDebInfo
 |   +-- Win32
 |       +-- Debug
 |       +-- Release
+|       +-- RelWithDebInfo
 +-- cmake                 # CMake modules and build subdirectories
 |   +-- build-vs2022      # Build directory for VS-2022 (note 2)
 |   +-- build-vs2019      # Build directory for VS-2019 (note 2)
@@ -434,7 +444,7 @@ Notes:
      will appear directly underneath the `BIN` directory.
    - Multi-configuration builders (`msbuild`, `xcodebuild`): The simulator
      executables will appear underneath individual configuration subdirectories
-     ("Debug" and "Release").
+     ("Debug", "Release" and "RelWithDebInfo").
    - The Windows platform has its `Win32` subdirectory.
 2. The `cmake-builder.ps1` and `cmake-builder.sh` scripts create the
    `cmake/build-*` subdirectories as needed.
@@ -830,6 +840,7 @@ following the table.
 | `BUILD_SHARED_DEPS`  | platform-specific  | Build dependencies as shared libraries/DLLs on Windows. Does nothing on Linux/macOS. Disabled by default on Windows to ensure that the simulators link against static libraries. |
 | `WITH_ASYNC`         | enabled            | Asynchronous I/O and threading support. |
 | `WITH_REGEX`         | enabled            | PCRE regular expression support. |
+| `PREFER_PCRE`        | disabled           | Prefer the original PCRE regular expression library over PCRE2. The default is PCRE2, which is more actively maintained. |
 | `WITH_NETWORK`       | enabled            | Simulator networking support. `WITH_PCAP`, `WITH_SLIRP`, `WITH_VDE` and `WITH_TAP` only have meaning if `WITH_NETWORK` is enabled. |
 | `WITH_PCAP`          | enabled            | libpcap (packet capture) support. |
 | `WITH_SLIRP`         | enabled            | SLIRP UDP network support. |

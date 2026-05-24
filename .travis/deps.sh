@@ -17,7 +17,15 @@ install_arch_linux() {
     sudo pacman -S --noconfirm mesa
     sudo pacman -S --noconfirm libsm
     sudo pacman -S --noconfirm cmake
+    sudo pacman -S --noconfirm sdl2_ttf
 
+}
+
+install_redhat() {
+    sudo dnf group install -y "development-tools"
+    sudo dnf install -y cmake ninja-build which g++
+    sudo dnf install -y SDL2_ttf-devel
+    sudo dnf install -y freetype-devel
 }
 
 install_linux() {
@@ -27,6 +35,7 @@ install_linux() {
     sudo apt-get install -ym libegl1-mesa-dev libgles2-mesa-dev
     sudo apt-get install -ym libsdl2-dev libfreetype6-dev libsdl2-ttf-dev
     sudo apt-get install -ym libpcap-dev libvdeplug-dev
+    sudo apt-get install -ym libpcre2-dev libpcre2-8-0
     sudo apt-get install -ym cmake cmake-data ninja-build
 }
 
@@ -38,6 +47,7 @@ install_mingw32() {
         mingw-w64-i686-gcc \
 	mingw-w64-i686-make \
         mingw-w64-i686-pcre \
+        mingw-w64-i686-pcre2 \
 	mingw-w64-i686-freetype \
         mingw-w64-i686-SDL2 \
 	mingw-w64-i686-SDL2_ttf
@@ -50,6 +60,7 @@ install_mingw64() {
         mingw-w64-x86_64-gcc \
 	mingw-w64-x86_64-make \
         mingw-w64-x86_64-pcre \
+        mingw-w64-x86_64-pcre2 \
 	mingw-w64-x86_64-freetype \
         mingw-w64-x86_64-SDL2 \
 	mingw-w64-x86_64-SDL2_ttf \
@@ -63,6 +74,7 @@ install_ucrt64() {
         mingw-w64-ucrt-x86_64-gcc \
 	mingw-w64-ucrt-x86_64-make \
         mingw-w64-ucrt-x86_64-pcre \
+        mingw-w64-ucrt-x86_64-pcre2 \
 	mingw-w64-ucrt-x86_64-freetype \
         mingw-w64-ucrt-x86_64-SDL2 \
 	mingw-w64-ucrt-x86_64-SDL2_ttf \
@@ -84,7 +96,7 @@ install_clang64() {
 
 
 case "$1" in
-  osx|macports|linux|mingw32|mingw64|ucrt64|clang64)
+  osx|macports|linux|mingw32|mingw64|redhat|ucrt64|clang64)
     install_"$1"
     ;;
   arch-linux)
