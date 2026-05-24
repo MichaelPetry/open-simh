@@ -104,6 +104,9 @@ extern DEVICE wdi2_dev;
 
 extern DEVICE scp300f_dev;
 extern DEVICE djhdc_dev;
+extern DEVICE esp32sd_dev;
+extern DEVICE imsaisd_dev;
+extern DEVICE rom_dev;
 
 extern long disasm (unsigned char *data, char *output, int segsize, long offset);
 extern t_stat parse_sym_m68k(char* c, t_addr a, UNIT* u, t_value* val, int32 sw);
@@ -148,6 +151,7 @@ DEVICE      *sim_devices[]  = {
     &ibc_smd_dev,
     /* IMSAI Devices */
     &fif_dev,
+    &imsaisd_dev,
     /* Micropolis Devices */
     &mfdc_dev,
     /* North Star Devices */
@@ -192,6 +196,10 @@ DEVICE      *sim_devices[]  = {
     &fw2_dev, &vfdhd_dev,
     /* Single-Board Computers */
     &n8vem_dev,
+    /* S100Computers.com Devices */
+    &esp32sd_dev,
+    /* Generic Devices */
+    &rom_dev,
     /* Floppy Controller Cores */
     &i8272_dev, &wd179x_dev,
     NULL
