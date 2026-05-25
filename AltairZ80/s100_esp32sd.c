@@ -130,6 +130,7 @@ static int32 esp32sd_echo_length = 0;
 static uint8 esp32sd_echo_buf[RESP_BUF_SIZE];
 static int32 esp32sd_echo_index = 0;
 static int32 esp32sd_unit_initialized[ESP32SD_UNITS] = { 0, 0 };
+static int32 esp32sd_rx_consumed = 0;  /* Set after data read, cleared on next status read */
 
 typedef struct {
     PNP_INFO    pnp;    /* Plug and Play */
@@ -215,6 +216,7 @@ static t_stat esp32sd_reset(DEVICE *dptr) {
     esp32sd_resp_length = 0;
     esp32sd_unit_initialized[0] = 0;
     esp32sd_unit_initialized[1] = 0;
+    esp32sd_rx_consumed = 0;
 
     return SCPE_OK;
 }
@@ -741,6 +743,11 @@ static int32 esp32sd_data_read(void) {
         }
     }
 
+    /* After reading a byte, suppress RX_READY for one status read cycle.
+     * This models the real hardware behavior where the ESP32 briefly
+     * deasserts the ready signal between bytes. */
+    esp32sd_rx_consumed = 1;
+
     sim_debug(VERBOSE_MSG, &esp32sd_dev,
               "ESP32SD: data read -> 0x%02X\n", result);
     return result;
@@ -763,9 +770,14 @@ static int32 esp32sd_status_read(void) {
     if (esp32sd_unit[1].flags & UNIT_ATT)
         status |= STAT_SD2_PRESENT;
 
-    /* Bit 7: RX_READY if there's data to read */
-    if (esp32sd_state == STATE_CMD_READ_DATA || esp32sd_resp_length > esp32sd_resp_index)
+    /* Bit 7: RX_READY if there's data to read.
+     * After a data read, suppress RX_READY for one status read cycle
+     * to model the real ESP32 inter-byte handshake timing. */
+    if (esp32sd_rx_consumed) {
+        esp32sd_rx_consumed = 0;
+    } else if (esp32sd_state == STATE_CMD_READ_DATA || esp32sd_resp_length > esp32sd_resp_index) {
         status |= STAT_RX_READY;
+    }
 
     sim_debug(STATUS_MSG, &esp32sd_dev,
               "ESP32SD: status read -> 0x%02X\n", status);
